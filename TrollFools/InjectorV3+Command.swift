@@ -146,7 +146,7 @@ extension InjectorV3 {
             var xmlContent = receipt.stdout
             DDLogInfo("BeforeEntitlements: \(xmlContent)", ddlog: logger)
             // insert SBStarkCapable = true
-            if let range = xmlContent.range(of: "</dict>"), !content.contains("SBStarkCapable") {
+            if let range = xmlContent.range(of: "</dict>"), !xmlContent.contains("SBStarkCapable") {
                 let insertString = "    <key>SBStarkCapable</key>\n    <true/>\n"
                 xmlContent.insert(contentsOf: insertString, at: range.lowerBound)
                 DDLogInfo("AfterEntitlements: \(xmlContent)", ddlog: logger)
