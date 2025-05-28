@@ -128,10 +128,11 @@ extension InjectorV3 {
             }
         }
 
+        DDLogInfo("BeforeLdid: \(force)-\(hasCodeSign)", ddlog: logger)
         guard force || !hasCodeSign else {
             return
         }
-
+        DDLogInfo("StartLdid: \(preservesEntitlements)", ddlog: logger)
         if preservesEntitlements {
             var receipt: AuxiliaryExecute.ExecuteReceipt
 
@@ -166,8 +167,25 @@ extension InjectorV3 {
                 try throwCommandFailure("ldid", reason: receipt.terminationReason)
             }
         } else {
+            let xmlContent = """
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>SBStarkCapable</key>
+    <true/>
+    <key>platform-application</key>
+    <true/>
+</dict>
+</plist>
+"""
+            let xmlURL = temporaryDirectoryURL
+                .appendingPathComponent("\(UUID().uuidString)_\(target.lastPathComponent)")
+                .appendingPathExtension("xml")
+            try xmlContent.write(to: xmlURL, atomically: true, encoding: .utf8)
+            
             let retCode = try Execute.rootSpawn(binary: Self.ldidBinaryURL.path, arguments: [
-                "-S", target.path,
+                "-S\(xmlURL.path)", target.path,
             ], ddlog: logger)
 
             guard case let .exit(code) = retCode, code == EXIT_SUCCESS else {
