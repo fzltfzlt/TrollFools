@@ -144,13 +144,13 @@ extension InjectorV3 {
             }
 
             var xmlContent = receipt.stdout
-            DDLogInfo("BeforeEntitlements: \(xmlContent)", ddlog: logger)
+            DDLogInfo("BeforeEntitlements: \(xmlContent ?? "nil")", ddlog: logger)
             // insert SBStarkCapable = true
-            if let range = xmlContent.range(of: "</dict>") &&
-                !xmlContent.contains("SBStarkCapable") {
+            if let content = xmlContent, let range = content.range(of: "</dict>"),
+               !content.contains("SBStarkCapable") {
                 let insertString = "    <key>SBStarkCapable</key>\n    <true/>\n"
-                xmlContent.insert(contentsOf: insertString, at: range.lowerBound)
-                DDLogInfo("AfterEntitlements: \(xmlContent)", ddlog: logger)
+                xmlContent?.insert(contentsOf: insertString, at: range.lowerBound)
+                DDLogInfo("AfterEntitlements: \(xmlContent ?? "nil")", ddlog: logger)
             }
             
             let xmlURL = temporaryDirectoryURL
