@@ -7,6 +7,7 @@
 
 import Foundation
 import MachOKit
+import CocoaLumberjackSwift
 
 extension InjectorV3 {
     // MARK: - chown
@@ -142,7 +143,16 @@ extension InjectorV3 {
                 try throwCommandFailure("ldid", reason: receipt.terminationReason)
             }
 
-            let xmlContent = receipt.stdout
+            var xmlContent = receipt.stdout
+            DDLogInfo("BeforeEntitlements: \(xmlContent)", ddlog: logger)
+            // insert SBStarkCapable = true
+            if let range = xmlContent.range(of: "</dict>") &&
+                !xmlContent.contains("SBStarkCapable") {
+                let insertString = "    <key>SBStarkCapable</key>\n    <true/>\n"
+                xmlContent.insert(contentsOf: insertString, at: range.lowerBound)
+                DDLogInfo("AfterEntitlements: \(xmlContent)", ddlog: logger)
+            }
+            
             let xmlURL = temporaryDirectoryURL
                 .appendingPathComponent("\(UUID().uuidString)_\(target.lastPathComponent)")
                 .appendingPathExtension("xml")
