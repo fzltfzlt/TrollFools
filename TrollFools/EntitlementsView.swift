@@ -102,17 +102,12 @@ struct EntitlementsView: View {
                     .font(.body)
                 
                 ScrollView {
-                    if let entitlements = app.entitlements {
-                        Text(entitlements)
-                            .font(.system(.footnote, design: .monospaced))
-                            .padding(4)
-                            .foregroundColor(.secondary)
-                            .cornerRadius(6)
-                    } else {
-                        Text(NSLocalizedString("No entitlements found.", comment: ""))
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
+                    Text(app.entitlements ?? "")
+                        .font(.system(.footnote, design: .monospaced))
+                        .padding(4)
+                        .cornerRadius(6)
+                        .foregroundColor(app.entitlements != nil ? .primary : .red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(minHeight: 70, maxHeight: 100)
                 .background(Color(.secondarySystemBackground))
@@ -130,6 +125,7 @@ struct EntitlementsView: View {
                         .padding(4)
                         .cornerRadius(6)
                         .foregroundColor(mergedContent != nil ? .primary : .red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(minHeight: 200, maxHeight: 300)
                 .background(Color(.secondarySystemBackground))
@@ -224,13 +220,13 @@ struct EntitlementsView: View {
                 }
             }
             if let mergedContent = mergedContent {
-                try self.injector?.injectEntitlements(mergedContent)
-                return .success(self.injector?.latestLogFileURL)
+                try injector?.injectEntitlements(mergedContent)
+                return .success(injector?.latestLogFileURL)
             } else {
                 var userInfo: [String: Any] = [
                     NSLocalizedDescriptionKey: "unmerged yet",
                 ]
-                if let logFileURL = self.injector?.latestLogFileURL {
+                if let logFileURL = injector?.latestLogFileURL {
                     userInfo[NSURLErrorKey] = logFileURL
                 }
                 let nsErr = NSError(domain: gTrollFoolsErrorDomain, code: 0, userInfo: userInfo)
@@ -241,7 +237,7 @@ struct EntitlementsView: View {
             var userInfo: [String: Any] = [
                 NSLocalizedDescriptionKey: error.localizedDescription,
             ]
-            if let logFileURL = self.injector?.latestLogFileURL {
+            if let logFileURL = injector?.latestLogFileURL {
                 userInfo[NSURLErrorKey] = logFileURL
             }
             let nsErr = NSError(domain: gTrollFoolsErrorDomain, code: 0, userInfo: userInfo)
@@ -251,8 +247,8 @@ struct EntitlementsView: View {
     
     fileprivate func restoreEntitlements() -> Error? {
         do {
-            if let executableURL = try self.injector?.locateExecutableInBundle(app.url) {
-                try self.injector?.restoreAlternate(executableURL)
+            if let executableURL = try injector?.locateExecutableInBundle(app.url) {
+                try injector?.restoreAlternate(executableURL)
             }
             return nil
         } catch {
@@ -260,7 +256,7 @@ struct EntitlementsView: View {
             var userInfo: [String: Any] = [
                 NSLocalizedDescriptionKey: error.localizedDescription,
             ]
-            if let logFileURL = self.injector?.latestLogFileURL {
+            if let logFileURL = injector?.latestLogFileURL {
                 userInfo[NSURLErrorKey] = logFileURL
             }
             let nsErr = NSError(domain: gTrollFoolsErrorDomain, code: 0, userInfo: userInfo)
@@ -283,7 +279,7 @@ extension App {
             name: "SampleApp",
             type: "",
             teamID: "",
-            url: URL("https://xxx.com")!
+            url: URL(string: "https://xxx.com")!
         )
         app.entitlements = """
             <?xml version="1.0" encoding="UTF-8"?>
