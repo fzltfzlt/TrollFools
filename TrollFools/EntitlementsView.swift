@@ -38,19 +38,14 @@ struct EntitlementsView: View {
                     .font(.body)
                 
                 ScrollView {
-                    if let entitlements = app.entitlements {
-                        Text(entitlements)
-                            .font(.system(.footnote, design: .monospaced))
-                            .padding(4)
-                            .foregroundColor(.secondary)
-                            .cornerRadius(6)
-                    } else {
-                        Text(NSLocalizedString("No entitlements found.", comment: ""))
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
+                    Text(app.entitlements ?? "")
+                        .font(.system(.footnote, design: .monospaced))
+                        .padding(4)
+                        .cornerRadius(6)
+                        .foregroundColor(app.entitlements != nil ? .primary : .red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(minHeight: 70, maxHeight: 100)
+                .frame(minHeight: 300, maxHeight: 500)
                 .background(Color(.secondarySystemBackground))
             }
             
@@ -67,10 +62,16 @@ struct EntitlementsView: View {
                       systemImage: "syringe")
             }
         }
+        .padding()
+        .navigationTitle("Entitlements")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear(perform: {
+            loadEntitlementsFromApp()
+        })
     }
     
     var injectContent: some View {
-        VStack(spacing: 60) {
+        VStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text((importResult != nil) ? importResult!.lastPathComponent : "Import a entitlements")
@@ -90,6 +91,7 @@ struct EntitlementsView: View {
                         .padding(4)
                         .cornerRadius(6)
                         .foregroundColor(importContent != nil ? .secondary : .red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(minHeight: 70, maxHeight: 100)
                 .background(Color(.secondarySystemBackground))
@@ -137,17 +139,30 @@ struct EntitlementsView: View {
                 let result = mergeAndInjectEntitlements()
                 switch result {
                 case .success(let url):
-                    Text("Success!\(url?.absoluteString ?? "")")
+                    SuccessView(
+                        title: NSLocalizedString("Completed", comment: ""),
+                        logFileURL: url
+                    )
+                    .onAppear {
+                        app.reload()
+                    }
                 case .failure(let err):
-                    Text("Failed!\(err)")
+                    FailureView(
+                        title: NSLocalizedString("Failed", comment: ""),
+                        error: err
+                    )
+                    .onAppear {
+                        app.reload()
+                    }
                 }
             } label: {
-                Label(NSLocalizedString("Merge Entitlements", comment: ""),
-                      systemImage: "syringe")
+                Label("Merge And Inject", systemImage: "lock.slash")
+                    .foregroundColor(.orange)
             }
         }
         .padding()
-        .navigationTitle(app.name)
+        .navigationTitle("Entitlements")
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: {
             loadEntitlementsFromApp()
         })
@@ -268,31 +283,8 @@ struct EntitlementsView: View {
 
 struct EntitlementsView_Previews: PreviewProvider {
     static var previews: some View {
-        EntitlementsView(App.example)
-    }
-}
-
-extension App {
-    static var example: App {
-        let app = App(
-            id: "123",
-            name: "SampleApp",
-            type: "",
-            teamID: "",
-            url: URL(string: "https://xxx.com")!
-        )
-        app.entitlements = """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-            <plist version="1.0">
-            <dict>
-                <key>com.apple.security.application-groups</key>
-                <array>
-                    <string>group.com.example.app</string>
-                </array>
-            </dict>
-            </plist>
-            """
-        return app
+        NavigationView {
+            EntitlementsView(App.example)
+        }
     }
 }

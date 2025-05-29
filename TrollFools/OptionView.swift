@@ -90,7 +90,25 @@ struct OptionView: View {
                 NavigationLink {
                     EntitlementsView(app)
                 } label: {
-                    OptionCell(option: .attach)
+                    VStack {
+                        Image(systemName: "lock.slash")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 32, height: 32)
+                            .foregroundColor(.orange)
+                            .padding(.all, 40)
+                            .background(
+                                (Color.yellow)
+                                    .opacity(0.1)
+                                    .clipShape(RoundedRectangle(
+                                        cornerRadius: 10,
+                                        style: .continuous
+                                    ))
+                            )
+                        Text("Entitlements")
+                            .font(.headline)
+                            .foregroundColor(.orange)
+                    }
                 }
                 .accessibilityLabel(NSLocalizedString("Entitlements", comment: ""))
 
@@ -164,5 +182,11 @@ struct OptionView: View {
             fatalError("No debian package found.")
         }
         return String(format: NSLocalizedString("You’ve selected at least one Debian Package “%@”. We’re here to remind you that it will not work as it was in a jailbroken environment. Please make sure you know what you’re doing.", comment: ""), firstDylibName)
+    }
+}
+
+struct OptionView_Previews: PreviewProvider {
+    static var previews: some View {
+        OptionView(App.example)
     }
 }
