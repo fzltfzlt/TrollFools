@@ -95,10 +95,9 @@ extension InjectorV3 {
 
     fileprivate static let ldidBinaryURL: URL = findExecutable("ldid")
 
-    func cmdExportEntitlements(_ target: URL) throws -> String {
-        var receipt: AuxiliaryExecute.ExecuteReceipt
-
-        receipt = try Execute.rootSpawnWithOutputs(binary: Self.ldidBinaryURL.path, arguments: [
+    func cmdExportEntitlements() throws -> String {
+        let target = try locateExecutableInBundle(self.bundleURL)
+        let receipt = try Execute.rootSpawnWithOutputs(binary: Self.ldidBinaryURL.path, arguments: [
             "-e", target.path,
         ], ddlog: logger)
 

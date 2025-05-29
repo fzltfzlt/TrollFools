@@ -217,7 +217,7 @@ struct EntitlementsView: View {
     fileprivate func loadEntitlementsFromApp() {
         do {
             let injector = try InjectorV3(app.url)
-            app.entitlements = try injector.cmdExportEntitlements(app.url)
+            app.entitlements = try injector.cmdExportEntitlements()
             updateMergedEntitlements()
         } catch {
             DDLogError("\(error)", ddlog: InjectorV3.main.logger)
