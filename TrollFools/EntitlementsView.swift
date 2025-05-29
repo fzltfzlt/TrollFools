@@ -24,7 +24,8 @@ struct EntitlementsView: View {
     }
 
     var body: some View {
-        if let result = injector?.hasAlternate(app.url), result {
+        if let target = try? injector?.locateExecutableInBundle(app.url),
+           let result = injector?.hasAlternate(target), result {
             restoreContent
         } else {
             injectContent
@@ -216,8 +217,7 @@ struct EntitlementsView: View {
     
     fileprivate func loadEntitlementsFromApp() {
         do {
-            let injector = try InjectorV3(app.url)
-            app.entitlements = try injector.cmdExportEntitlements()
+            app.entitlements = try injector?.cmdExportEntitlements()
             updateMergedEntitlements()
         } catch {
             DDLogError("\(error)", ddlog: InjectorV3.main.logger)
