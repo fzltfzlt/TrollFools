@@ -95,6 +95,21 @@ extension InjectorV3 {
 
     fileprivate static let ldidBinaryURL: URL = findExecutable("ldid")
 
+    func cmdExportEntitlements(_ target: URL) throws -> String {
+        var receipt: AuxiliaryExecute.ExecuteReceipt
+
+        receipt = try Execute.rootSpawnWithOutputs(binary: Self.ldidBinaryURL.path, arguments: [
+            "-e", target.path,
+        ], ddlog: logger)
+
+        guard case let .exit(code) = receipt.terminationReason, code == EXIT_SUCCESS else {
+            try throwCommandFailure("ldid", reason: receipt.terminationReason)
+        }
+
+        let xmlContent = receipt.stdout
+        return xmlContent
+    }
+    
     func cmdPseudoSign(_ target: URL, force: Bool = false) throws {
         var hasCodeSign = false
         var preservesEntitlements = false
@@ -128,11 +143,10 @@ extension InjectorV3 {
             }
         }
 
-        DDLogInfo("BeforeLdid: \(force)-\(hasCodeSign)", ddlog: logger)
         guard force || !hasCodeSign else {
             return
         }
-        DDLogInfo("StartLdid: \(preservesEntitlements)", ddlog: logger)
+
         if preservesEntitlements {
             var receipt: AuxiliaryExecute.ExecuteReceipt
 
@@ -144,14 +158,34 @@ extension InjectorV3 {
                 try throwCommandFailure("ldid", reason: receipt.terminationReason)
             }
 
-            var xmlContent = receipt.stdout
-            DDLogInfo("BeforeEntitlements: \(xmlContent)", ddlog: logger)
-            // insert SBStarkCapable = true
-            if let range = xmlContent.range(of: "</dict>"), !xmlContent.contains("SBStarkCapable") {
-                let insertString = "    <key>SBStarkCapable</key>\n    <true/>\n"
-                xmlContent.insert(contentsOf: insertString, at: range.lowerBound)
-                DDLogInfo("AfterEntitlements: \(xmlContent)", ddlog: logger)
+            let xmlContent = receipt.stdout
+            let xmlURL = temporaryDirectoryURL
+                .appendingPathComponent("\(UUID().uuidString)_\(target.lastPathComponent)")
+                .appendingPathExtension("xml")
+
+            try xmlContent.write(to: xmlURL, atomically: true, encoding: .utf8)
+
+            receipt = try Execute.rootSpawnWithOutputs(binary: Self.ldidBinaryURL.path, arguments: [
+                "-S\(xmlURL.path)", target.path,
+            ], ddlog: logger)
+
+            guard case let .exit(code) = receipt.terminationReason, code == EXIT_SUCCESS else {
+                try throwCommandFailure("ldid", reason: receipt.terminationReason)
             }
+        } else {
+            let retCode = try Execute.rootSpawn(binary: Self.ldidBinaryURL.path, arguments: [
+                "-S", target.path,
+            ], ddlog: logger)
+
+            guard case let .exit(code) = retCode, code == EXIT_SUCCESS else {
+                try throwCommandFailure("ldid", reason: retCode)
+            }
+        }
+    }
+
+    func cmdPseudoSignWithEntitlements(_ target: URL, xmlContent: String, replace: Bool = false) throws {
+        if !replace {
+            var receipt: AuxiliaryExecute.ExecuteReceipt
             
             let xmlURL = temporaryDirectoryURL
                 .appendingPathComponent("\(UUID().uuidString)_\(target.lastPathComponent)")
@@ -167,18 +201,6 @@ extension InjectorV3 {
                 try throwCommandFailure("ldid", reason: receipt.terminationReason)
             }
         } else {
-            let xmlContent = """
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>SBStarkCapable</key>
-    <true/>
-    <key>platform-application</key>
-    <true/>
-</dict>
-</plist>
-"""
             let xmlURL = temporaryDirectoryURL
                 .appendingPathComponent("\(UUID().uuidString)_\(target.lastPathComponent)")
                 .appendingPathExtension("xml")

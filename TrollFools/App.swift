@@ -17,7 +17,8 @@ final class App: Identifiable, ObservableObject {
     let url: URL
     let version: String?
     let isAdvertisement: Bool
-
+    var entitlements: String?
+    
     @Published var isDetached: Bool = false
     @Published var isAllowedToAttachOrDetach: Bool
     @Published var isInjected: Bool = false

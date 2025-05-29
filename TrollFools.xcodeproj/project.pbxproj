@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		32954A4B2DE71EDF003CD02B /* EntitlementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32954A4A2DE71ED3003CD02B /* EntitlementsView.swift */; };
 		6124A06D2CD2322400C52253 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6124A06C2CD2322400C52253 /* App.swift */; };
 		6124A06F2CD2324200C52253 /* AppListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6124A06E2CD2324200C52253 /* AppListModel.swift */; };
 		6124A0712CD2326500C52253 /* FilterOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6124A0702CD2326500C52253 /* FilterOptions.swift */; };
@@ -136,6 +137,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		32954A4A2DE71ED3003CD02B /* EntitlementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntitlementsView.swift; sourceTree = "<group>"; };
 		6124A06C2CD2322400C52253 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		6124A06E2CD2324200C52253 /* AppListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppListModel.swift; sourceTree = "<group>"; };
 		6124A0702CD2326500C52253 /* FilterOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterOptions.swift; sourceTree = "<group>"; };
@@ -280,6 +282,7 @@
 		6124A0722CD2327E00C52253 /* View */ = {
 			isa = PBXGroup;
 			children = (
+				32954A4A2DE71ED3003CD02B /* EntitlementsView.swift */,
 				6124A0732CD2328600C52253 /* AppListCell.swift */,
 				CCF4706D2C4A4BAB008D8197 /* AppListView.swift */,
 				61C7D54B2D82DBAC0064D626 /* DisclaimerView.swift */,
@@ -620,6 +623,7 @@
 				61EFA3772D30403900159442 /* InjectorV3+Metadata.swift in Sources */,
 				6124A0762CD232C600C52253 /* Option.swift in Sources */,
 				6124A07D2CD233A700C52253 /* InjectedPlugIn.swift in Sources */,
+				32954A4B2DE71EDF003CD02B /* EntitlementsView.swift in Sources */,
 				CC1548DB2C4A7C7000A4173E /* Execute.swift in Sources */,
 				6124A0742CD2328600C52253 /* AppListCell.swift in Sources */,
 				6168001D2D3652B600DF485F /* LogsView.swift in Sources */,

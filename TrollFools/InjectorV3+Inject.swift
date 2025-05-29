@@ -40,6 +40,17 @@ extension InjectorV3 {
             .filter { $0.pathExtension.lowercased() == "dylib" || $0.pathExtension.lowercased() == "framework" })
     }
 
+    func injectEntitlements(_ content: String) throws {
+        let targetMachO = try locateExecutableInBundle(self.bundleURL)
+        do {
+            try makeAlternate(targetMachO)
+            try cmdPseudoSignWithEntitlements(targetMachO, xmlContent: content)
+        } catch {
+            try? restoreAlternate(targetMachO)
+            throw error
+        }
+    }
+    
     // MARK: - Private Methods
 
     fileprivate func injectBundles(_ assetURLs: [URL]) throws {
@@ -178,7 +189,7 @@ extension InjectorV3 {
             }
         }
     }
-
+    
     // MARK: - Path Clone
 
     fileprivate func copyfiles(_ assetURLs: [URL]) throws {

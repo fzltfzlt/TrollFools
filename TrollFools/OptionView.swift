@@ -86,6 +86,15 @@ struct OptionView: View {
                 .accessibilityLabel(NSLocalizedString("Eject", comment: ""))
 
                 Spacer()
+                
+                NavigationLink {
+                    EntitlementsView(app)
+                } label: {
+                    OptionCell(option: .attach)
+                }
+                .accessibilityLabel(NSLocalizedString("Entitlements", comment: ""))
+
+                Spacer()
             }
 
             Button {
