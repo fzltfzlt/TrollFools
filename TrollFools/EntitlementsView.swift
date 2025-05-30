@@ -16,16 +16,18 @@ struct EntitlementsView: View {
     @State var isImporterPresented = false
     @State var importResult: URL?
     @State var importContent: String?
+    @State var appContent: String?
     @State var mergedContent: String?
+    @State var modifiedMarker: Bool = false
     
     init(_ app: App) {
         self.app = app
         self.injector = try? InjectorV3(app.url)
+        self.modifiedMarker = injector?.checkIsInjectedEntitlements(app.url) ?? false
     }
 
     var body: some View {
-        if let target = try? injector?.locateExecutableInBundle(app.url),
-           let result = injector?.hasAlternate(target), result {
+        if modifiedMarker {
             restoreContent
         } else {
             injectContent
@@ -39,11 +41,11 @@ struct EntitlementsView: View {
                     .font(.body)
                 
                 ScrollView {
-                    Text(app.entitlements ?? "")
+                    Text(appContent ?? "")
                         .font(.system(.footnote, design: .monospaced))
                         .padding(4)
                         .cornerRadius(6)
-                        .foregroundColor(app.entitlements != nil ? .primary : .red)
+                        .foregroundColor(appContent != nil ? .primary : .red)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(minHeight: 300, maxHeight: 500)
@@ -53,18 +55,20 @@ struct EntitlementsView: View {
             Spacer()
             
             NavigationLink {
-                if let err = restoreEntitlements() {
-                    FailureView(
-                        title: NSLocalizedString("Failed", comment: ""),
-                        error: err
+                let result = restoreEntitlements()
+                switch result {
+                case .success(let url):
+                    SuccessView(
+                        title: NSLocalizedString("Completed", comment: ""),
+                        logFileURL: self.injector?.latestLogFileURL
                     )
                     .onAppear {
                         app.reload()
                     }
-                } else {
-                    SuccessView(
-                        title: NSLocalizedString("Completed", comment: ""),
-                        logFileURL: self.injector?.latestLogFileURL
+                case .failure(let err):
+                    FailureView(
+                        title: NSLocalizedString("Failed", comment: ""),
+                        error: err
                     )
                     .onAppear {
                         app.reload()
@@ -79,6 +83,7 @@ struct EntitlementsView: View {
         .navigationTitle("Entitlements")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: {
+            modifiedMarker = injector?.checkIsInjectedEntitlements(app.url) ?? false
             loadEntitlementsFromApp()
         })
     }
@@ -117,11 +122,11 @@ struct EntitlementsView: View {
                     .font(.body)
                 
                 ScrollView {
-                    Text(app.entitlements ?? "")
+                    Text(appContent ?? "")
                         .font(.system(.footnote, design: .monospaced))
                         .padding(4)
                         .cornerRadius(6)
-                        .foregroundColor(app.entitlements != nil ? .primary : .red)
+                        .foregroundColor(appContent != nil ? .primary : .red)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(minHeight: 70, maxHeight: 100)
@@ -179,6 +184,7 @@ struct EntitlementsView: View {
         .navigationTitle("Entitlements")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: {
+            modifiedMarker = injector?.checkIsInjectedEntitlements(app.url) ?? false
             loadEntitlementsFromApp()
         })
         .fileImporter(
@@ -214,7 +220,7 @@ struct EntitlementsView: View {
     fileprivate func updateMergedEntitlements() {
         mergedContent = nil
         if let importedEntitlements = importContent,
-            let appEntitlements = app.entitlements,
+           let appEntitlements = appContent,
             let importedData = importedEntitlements.data(using: .utf8),
             let appData = appEntitlements.data(using: .utf8),
             let importedPlist = try? PropertyListSerialization.propertyList(from: importedData, options: [], format: nil) as? [String: Any],
@@ -232,6 +238,7 @@ struct EntitlementsView: View {
     fileprivate func loadEntitlementsFromApp() {
         do {
             app.entitlements = try injector?.cmdExportEntitlements()
+            appContent = app.entitlements
             updateMergedEntitlements()
         } catch {
             DDLogError("\(error)", ddlog: InjectorV3.main.logger)
@@ -274,12 +281,13 @@ struct EntitlementsView: View {
         }
     }
     
-    fileprivate func restoreEntitlements() -> Error? {
+    fileprivate func restoreEntitlements() -> Result<URL?, Error> {
         do {
             if let executableURL = try injector?.locateExecutableInBundle(app.url) {
                 try injector?.restoreAlternate(executableURL)
+                try injector.
             }
-            return nil
+            return .success(injector?.latestLogFileURL)
         } catch {
             DDLogError("\(error)", ddlog: InjectorV3.main.logger)
             var userInfo: [String: Any] = [
@@ -289,7 +297,7 @@ struct EntitlementsView: View {
                 userInfo[NSURLErrorKey] = logFileURL
             }
             let nsErr = NSError(domain: gTrollFoolsErrorDomain, code: 0, userInfo: userInfo)
-            return nsErr
+            return .failure(nsErr)
         }
     }
 }
