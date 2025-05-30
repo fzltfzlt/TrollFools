@@ -27,6 +27,7 @@ extension InjectorV3 {
 
     fileprivate static let infoPlistName = "Info.plist"
     fileprivate static let injectedMarkerName = ".troll-fools"
+    fileprivate static let injectedEntitlementsMarkerName = ".troll-fools-entitlements"
 
     // MARK: - Instance Methods
 
@@ -181,6 +182,23 @@ extension InjectorV3 {
         }
     }
 
+    func markMainBundleAsInjectedEntitlements( privileged: Bool) throws {
+        if privileged {
+            let markerURL = temporaryDirectoryURL.appendingPathComponent(Self.injectedEntitlementsMarkerName)
+            try Data().write(to: markerURL, options: .atomic)
+            try cmdChangeOwnerToInstalld(markerURL, recursively: false)
+            
+            try cmdCopy(
+                from: markerURL,
+                to: bundleURL.appendingPathComponent(Self.injectedEntitlementsMarkerName),
+                clone: true,
+                overwrite: true
+            )
+        } else {
+            try Data().write(to: bundleURL.appendingPathComponent(Self.injectedEntitlementsMarkerName), options: .atomic)
+        }
+    }
+    
     func identifierOfBundle(_ target: URL) throws -> String {
         precondition(checkIsBundle(target), "Not a bundle: \(target.path)")
 
@@ -267,6 +285,15 @@ extension InjectorV3 {
         }
 
         let markerURL = target.appendingPathComponent(Self.injectedMarkerName)
+        return FileManager.default.fileExists(atPath: markerURL.path)
+    }
+    
+    func checkIsInjectedEntitlements(_ target: URL) -> Bool {
+        guard checkIsBundle(target) else {
+            return false
+        }
+
+        let markerURL = target.appendingPathComponent(Self.injectedEntitlementsMarkerName)
         return FileManager.default.fileExists(atPath: markerURL.path)
     }
 

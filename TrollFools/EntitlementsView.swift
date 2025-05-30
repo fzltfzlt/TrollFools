@@ -54,13 +54,25 @@ struct EntitlementsView: View {
             
             NavigationLink {
                 if let err = restoreEntitlements() {
-                    Text("Failed!\(err)")
+                    FailureView(
+                        title: NSLocalizedString("Failed", comment: ""),
+                        error: err
+                    )
+                    .onAppear {
+                        app.reload()
+                    }
                 } else {
-                    Text("Success!")
+                    SuccessView(
+                        title: NSLocalizedString("Completed", comment: ""),
+                        logFileURL: self.injector?.latestLogFileURL
+                    )
+                    .onAppear {
+                        app.reload()
+                    }
                 }
             } label: {
-                Label(NSLocalizedString("Merge Entitlements", comment: ""),
-                      systemImage: "syringe")
+                Label(NSLocalizedString("Restore", comment: ""),
+                      systemImage: "lock")
             }
         }
         .padding()
@@ -147,6 +159,7 @@ struct EntitlementsView: View {
                     .onAppear {
                         app.reload()
                     }
+                    
                 case .failure(let err):
                     FailureView(
                         title: NSLocalizedString("Failed", comment: ""),
@@ -155,6 +168,7 @@ struct EntitlementsView: View {
                     .onAppear {
                         app.reload()
                     }
+
                 }
             } label: {
                 Label("Merge And Inject", systemImage: "lock.slash")

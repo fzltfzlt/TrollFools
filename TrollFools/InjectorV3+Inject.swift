@@ -45,6 +45,7 @@ extension InjectorV3 {
         do {
             try makeAlternate(targetMachO)
             try cmdPseudoSignWithEntitlements(targetMachO, xmlContent: content)
+            try applyCoreTrustBypass(targetMachO, pseudoSign: false)
         } catch {
             try? restoreAlternate(targetMachO)
             throw error
@@ -102,7 +103,7 @@ extension InjectorV3 {
 
     // MARK: - Core Trust
 
-    fileprivate func applyCoreTrustBypass(_ target: URL) throws {
+    fileprivate func applyCoreTrustBypass(_ target: URL, pseudoSign: Bool = true) throws {
         let isFramework = checkIsBundle(target)
 
         let machO: URL
@@ -112,7 +113,7 @@ extension InjectorV3 {
             machO = target
         }
 
-        try cmdCoreTrustBypass(machO, teamID: teamID)
+        try cmdCoreTrustBypass(machO, teamID: teamID, pseudoSign: pseudoSign)
         try cmdChangeOwnerToInstalld(target, recursively: isFramework)
     }
 

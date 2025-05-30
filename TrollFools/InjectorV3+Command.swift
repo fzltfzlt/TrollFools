@@ -307,8 +307,10 @@ extension InjectorV3 {
 
     fileprivate static let ctBypassBinaryURL = findExecutable("ct_bypass")
 
-    func cmdCoreTrustBypass(_ target: URL, teamID: String) throws {
-        try cmdPseudoSign(target)
+    func cmdCoreTrustBypass(_ target: URL, teamID: String, pseudoSign: Bool = true) throws {
+        if pseudoSign {
+            try cmdPseudoSign(target)
+        }
         let retCode = try Execute.rootSpawn(binary: Self.ctBypassBinaryURL.path, arguments: [
             "-r", "-i", target.path, "-t", teamID,
         ], ddlog: logger)
